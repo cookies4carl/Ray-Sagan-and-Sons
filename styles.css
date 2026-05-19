@@ -1390,7 +1390,7 @@ textarea { resize: vertical; min-height: 120px; }
   .hero-logo { margin-left: auto; margin-right: auto; width: 90%; }
 .hero-actions { flex-direction: column; align-items: center; }
   .hero-actions .btn { width: 70%; text-align: center; flex: none; font-size: 1rem; padding: 0.75rem 1.5rem; }
-  .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; justify-content: unset; margin-top: 2rem; align-items: start; }
+  .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; justify-content: unset; margin-top: 2rem; align-items: start; margin-bottom: 4rem; }
   .stat-divider { display: none; }
   .stat { align-items: center; flex-shrink: 1; min-width: 0; }
   .stat-label { text-align: center; }
@@ -1406,7 +1406,10 @@ textarea { resize: vertical; min-height: 120px; }
   .about-content { text-align: center; }
   .about-content p { text-align: center; }
   .about-highlights { align-items: center; }
-  .about-highlights li { justify-content: center; }
+  .about-highlights li { justify-content: center; white-space: nowrap; font-size: 0.85rem; }
+  .about-badge { padding: 0.6rem 0.9rem; bottom: -0.75rem; right: -0.5rem; }
+  .badge-year { font-size: 1.2rem; }
+  .badge-text { font-size: 0.6rem; }
 
   /* Services */
   .services-grid { grid-template-columns: 1fr; }
