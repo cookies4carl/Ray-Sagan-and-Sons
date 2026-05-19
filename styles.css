@@ -1295,7 +1295,7 @@ textarea { resize: vertical; min-height: 120px; }
 
   /* Hero */
   .tablet-break { display: inline; }
-  .hero-content { padding-top: calc(var(--header-height) - 6rem); }
+  .hero-content { padding-top: calc(var(--header-height) + 0.5rem); }
   .hero-title { margin-top: 20px; }
   .hero-logo { width: 75%; margin-left: auto; margin-right: auto; }
   .hero-actions .btn { font-size: 0.9rem; padding: 0.75rem 1.5rem; flex: 0 0 180px; }
@@ -1383,13 +1383,13 @@ textarea { resize: vertical; min-height: 120px; }
   .hero-eyebrow,
   .hero-title,
   .hero-sub { text-align: center; }
-  .hero-content { padding-top: calc(var(--header-height) - 6rem); }
+  .hero-content { padding-top: calc(var(--header-height) + 1.5rem); }
   .mobile-break { display: inline; }
   .hero-eyebrow { font-size: 0.8rem; }
   .hero-title { font-size: 1.8rem; white-space: normal; margin-top: 25px; text-align: center; }
   .hero-logo { margin-left: auto; margin-right: auto; width: 90%; }
 .hero-actions { flex-direction: column; align-items: center; }
-  .hero-actions .btn { width: 50%; text-align: center; flex: none; font-size: 1rem; padding: 0.75rem 1.5rem; }
+  .hero-actions .btn { width: 70%; text-align: center; flex: none; font-size: 1rem; padding: 0.75rem 1.5rem; }
   .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; justify-content: unset; margin-top: 2rem; align-items: start; }
   .stat-divider { display: none; }
   .stat { align-items: center; flex-shrink: 1; min-width: 0; }
