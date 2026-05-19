@@ -1387,7 +1387,8 @@ textarea { resize: vertical; min-height: 120px; }
   .mobile-break { display: inline; }
   .hero-eyebrow { font-size: 0.8rem; }
   .hero-title { font-size: 1.8rem; white-space: normal; margin-top: 25px; text-align: center; }
-  .hero-logo { margin-left: auto; margin-right: auto; width: 90%; }
+  .hero-logo { margin-left: auto; margin-right: auto; width: 100%; }
+  #submit-btn { width: 100%; box-sizing: border-box; }
 .hero-actions { flex-direction: column; align-items: center; }
   .hero-actions .btn { width: 70%; text-align: center; flex: none; font-size: 1rem; padding: 0.75rem 1.5rem; }
   .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; justify-content: unset; margin-top: 2rem; align-items: start; margin-bottom: 4rem; }
