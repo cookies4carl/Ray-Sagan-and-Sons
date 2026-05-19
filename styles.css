@@ -1386,8 +1386,8 @@ textarea { resize: vertical; min-height: 120px; }
   .hero-content { padding-top: calc(var(--header-height) + 1.5rem); }
   .mobile-break { display: inline; }
   .hero-eyebrow { font-size: 0.8rem; }
-  .hero-title { font-size: 1.8rem; white-space: normal; margin-top: 25px; text-align: center; }
-  .hero-logo { margin-left: auto; margin-right: auto; width: 100%; }
+  .hero-title { font-size: 1.45rem; white-space: nowrap; margin-top: 25px; text-align: center; }
+  .hero-logo { margin-left: -1rem; margin-right: -1rem; width: calc(100% + 2rem); }
   #submit-btn { width: 100%; box-sizing: border-box; }
 .hero-actions { flex-direction: column; align-items: center; }
   .hero-actions .btn { width: 70%; text-align: center; flex: none; font-size: 1rem; padding: 0.75rem 1.5rem; }
