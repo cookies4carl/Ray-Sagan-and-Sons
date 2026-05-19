@@ -1012,6 +1012,47 @@ textarea { resize: vertical; min-height: 120px; }
 
 .contact-item:hover .contact-item-icon { background: var(--color-orange); color: #fff; }
 
+.hiring-badge {
+  margin-top: 2rem;
+  background: var(--color-navy);
+  border: 2px solid #b5d334;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.6rem;
+}
+
+.hiring-label {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #b5d334;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hiring-badge p {
+  margin: 0;
+  color: var(--color-white);
+  font-size: 0.95rem;
+  max-width: 100%;
+}
+
+.hiring-note {
+  font-size: 0.73rem;
+  color: rgba(255,255,255,0.7);
+}
+
+.hiring-badge .btn {
+  width: auto;
+  align-self: center;
+  padding: 0.75rem 1.75rem;
+  font-size: 1rem;
+}
+
 .map-wrap {
   margin-top: 70px;
   border-radius: var(--radius-lg);
