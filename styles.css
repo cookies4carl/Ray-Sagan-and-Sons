@@ -609,7 +609,7 @@ a:hover { color: var(--color-orange-dk); }
 
 .testimonial-card {
   background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(181,211,52,0.25);
+  border: 2px solid rgba(181,211,52,0.25);
   transition: border-color 0.2s ease;
   border-radius: var(--radius-lg);
   padding: 2rem;
