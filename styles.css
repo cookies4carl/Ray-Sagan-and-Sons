@@ -1383,7 +1383,7 @@ textarea { resize: vertical; min-height: 120px; }
   .hero-eyebrow,
   .hero-title,
   .hero-sub { text-align: center; }
-  .hero-content { padding-top: calc(var(--header-height) + 1.5rem); padding-right: 1.25rem; }
+  .hero-content { padding-top: calc(var(--header-height) + 1.5rem); padding-right: 1.25rem; transform: translateX(-10px); }
   .hero-sub { font-size: 0.85rem; line-height: 1.5; }
   .hero-actions .btn { width: 80%; }
   .mobile-break { display: inline; }
