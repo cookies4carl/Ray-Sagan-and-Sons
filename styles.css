@@ -1384,6 +1384,7 @@ textarea { resize: vertical; min-height: 120px; }
   .hero-title,
   .hero-sub { text-align: center; }
   .hero-content { padding-top: calc(var(--header-height) + 1.5rem); padding-right: 0; }
+  .hero-sub { font-size: 0.85rem; }
   .mobile-break { display: inline; }
   .hero-eyebrow { font-size: 0.8rem; }
   .hero-title { font-size: 1.45rem; white-space: nowrap; margin-top: 25px; text-align: center; }
