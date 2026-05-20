@@ -1378,6 +1378,7 @@ textarea { resize: vertical; min-height: 120px; }
    ============================================= */
 @media (max-width: 600px) {
   .section { padding: 3.5rem 0; }
+  #contact { padding-bottom: 1.75rem; }
 
   /* Hero */
   .hero-eyebrow,
