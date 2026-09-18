@@ -12,10 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── STICKY HEADER + BACK-TO-TOP ──────────────
   const header    = document.getElementById('site-header');
   const backToTop = document.getElementById('back-to-top');
+  const callFab   = document.getElementById('call-fab');
+  const hero      = document.getElementById('home');
 
   function handleScroll() {
     header.classList.toggle('scrolled', window.scrollY > 30);
     backToTop.classList.toggle('visible', window.scrollY > 400);
+    // Click-to-call appears once the hero has scrolled out of view
+    callFab.classList.toggle('visible', window.scrollY > hero.offsetHeight - header.offsetHeight);
   }
 
   window.addEventListener('scroll', handleScroll, { passive: true });
@@ -144,21 +148,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Auto-scroll via RAF — uses a fractional accumulator so subpixel
-    // increments don't get lost to scrollLeft's integer rounding
-    let paused = false;
-    let scrollPos = 0;
-    const speed = 0.35; // px per frame (~21px/s)
+    // increments don't get lost to scrollLeft's integer rounding.
+    // Speeds are px per 60fps frame; scaled by real frame time so 120Hz
+    // phones don't run double speed.
+    const mobileMQ     = window.matchMedia('(max-width: 600px)');
+    const SPEED_DESKTOP = 0.35; // ~21px/s
+    const SPEED_MOBILE  = 0.9;  // ~54px/s
+
+    let paused      = false;
+    let touchPaused = false;   // paused because of a finger / swipe momentum
+    let resumeTimer = null;
+    let scrollPos   = 0;
+    let lastSet     = 0;       // scrollLeft as we last wrote it
+    let lastTime    = 0;
 
     function startScrolling() {
-      (function tick() {
+      (function tick(now) {
+        const dt = lastTime ? Math.min((now - lastTime) / 16.667, 3) : 1;
+        lastTime = now;
         if (!paused) {
+          // If scrollLeft isn't where we left it, the user moved the river
+          // (swipe / momentum) — carry on from there instead of snapping back.
+          if (Math.abs(river.scrollLeft - lastSet) > 1.5) scrollPos = river.scrollLeft;
           const halfWidth = river.scrollWidth / 2;
-          scrollPos += speed;
+          scrollPos += (mobileMQ.matches ? SPEED_MOBILE : SPEED_DESKTOP) * dt;
           if (halfWidth > 0 && scrollPos >= halfWidth) scrollPos -= halfWidth;
           river.scrollLeft = scrollPos;
+          lastSet = river.scrollLeft;
         }
         requestAnimationFrame(tick);
-      })();
+      })(performance.now());
     }
 
     // Wait until images have laid out (so scrollWidth is real) before starting
@@ -176,9 +195,25 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!e.relatedTarget?.closest('.gallery-river')) paused = false;
     });
     river.addEventListener('mouseleave', () => { paused = false; });
-    // Touch: pause while interacting, resume after 3s of inactivity
-    river.addEventListener('touchstart', () => { paused = true;  }, { passive: true });
-    river.addEventListener('touchend',   () => { setTimeout(() => { paused = false; }, 3000); }, { passive: true });
+
+    // Touch: hold still while the finger is down and while swipe momentum
+    // is still moving the river; resume from wherever it stopped.
+    function scheduleResume() {
+      clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(() => { resumeTimer = null; touchPaused = false; paused = false; }, 2500);
+    }
+    river.addEventListener('touchstart', () => {
+      touchPaused = true;
+      paused = true;
+      clearTimeout(resumeTimer);
+      resumeTimer = null;
+    }, { passive: true });
+    river.addEventListener('touchend',    scheduleResume, { passive: true });
+    river.addEventListener('touchcancel', scheduleResume, { passive: true });
+    river.addEventListener('scroll', () => {
+      // Momentum scrolling after the finger lifts — keep extending the pause
+      if (touchPaused && resumeTimer) scheduleResume();
+    }, { passive: true });
 
     // Lightbox builder
     function buildLightbox() {
@@ -190,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       lightboxImg = document.createElement('img');
       lightboxImg.className = 'lightbox-img';
+      lightboxImg.draggable = false;
 
       const closeBtn = document.createElement('button');
       closeBtn.className = 'lightbox-close';
@@ -200,16 +236,25 @@ document.addEventListener('DOMContentLoaded', () => {
       lightbox.appendChild(lightboxImg);
       lightbox.appendChild(closeBtn);
       lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+      addSwipe(lightbox);
       document.body.appendChild(lightbox);
+    }
+
+    function showImage(index) {
+      const img = originals[index]?.querySelector('img');
+      if (!img) return false;
+      lightboxImg.src = img.src;
+      lightboxImg.alt = img.alt;
+      currentIdx = index;
+      return true;
     }
 
     function openLightbox(index) {
       if (!lightbox) buildLightbox();
-      const img = originals[index]?.querySelector('img');
-      if (!img) return;
-      lightboxImg.src = img.src;
-      lightboxImg.alt = img.alt;
-      currentIdx = index;
+      if (!showImage(index)) return;
+      lightboxImg.style.transition = '';
+      lightboxImg.style.transform = '';
+      lightboxImg.style.opacity = '';
       lightbox.classList.add('active');
       document.body.style.overflow = 'hidden';
       lightbox.querySelector('.lightbox-close').focus();
@@ -218,14 +263,135 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeLightbox() {
       if (!lightbox) return;
       lightbox.classList.remove('active');
-      document.body.style.overflow = '';
+      // Back to the full-gallery grid if that's where we came from
+      if (!galleryModal?.classList.contains('active')) document.body.style.overflow = '';
     }
 
+    // Swipe left/right in the lightbox to change photo (image follows the finger)
+    function addSwipe(el) {
+      const THRESHOLD = 50;
+      let startX = 0, startY = 0, dx = 0, tracking = false, horizontal = null, busy = false;
+
+      el.addEventListener('touchstart', e => {
+        if (busy || e.touches.length !== 1) { tracking = false; return; }
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        dx = 0; horizontal = null; tracking = true;
+        lightboxImg.style.transition = 'none';
+      }, { passive: true });
+
+      el.addEventListener('touchmove', e => {
+        if (!tracking) return;
+        if (e.touches.length !== 1) { tracking = false; return; }
+        dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        if (horizontal === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+          horizontal = Math.abs(dx) > Math.abs(dy);
+        }
+        if (horizontal) lightboxImg.style.transform = `translateX(${dx}px)`;
+      }, { passive: true });
+
+      function end() {
+        if (!tracking) return;
+        tracking = false;
+        if (!horizontal) return;
+        const total = originals.length;
+        if (Math.abs(dx) < THRESHOLD || total < 2) {
+          lightboxImg.style.transition = 'transform 0.2s ease';
+          lightboxImg.style.transform = '';
+          return;
+        }
+        const dir = dx < 0 ? 1 : -1;               // 1 = next, -1 = previous
+        const off = window.innerWidth * 0.7;
+        busy = true;
+        lightboxImg.style.transition = 'transform 0.18s ease, opacity 0.18s ease';
+        lightboxImg.style.transform = `translateX(${-dir * off}px)`;
+        lightboxImg.style.opacity = '0';
+        setTimeout(() => {
+          showImage((currentIdx + dir + total) % total);
+          lightboxImg.style.transition = 'none';
+          lightboxImg.style.transform = `translateX(${dir * off}px)`;
+          void lightboxImg.offsetWidth;            // commit start position
+          lightboxImg.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+          lightboxImg.style.transform = '';
+          lightboxImg.style.opacity = '';
+          setTimeout(() => { busy = false; }, 200);
+        }, 180);
+      }
+      el.addEventListener('touchend', end, { passive: true });
+      el.addEventListener('touchcancel', end, { passive: true });
+    }
+
+    // ── FULL GALLERY MODAL (mobile "See full gallery" link) ──
+    let galleryModal = null;
+    const moreLink = document.getElementById('gallery-more');
+
+    function buildGalleryModal() {
+      galleryModal = document.createElement('div');
+      galleryModal.className = 'gallery-modal';
+      galleryModal.setAttribute('role', 'dialog');
+      galleryModal.setAttribute('aria-modal', 'true');
+      galleryModal.setAttribute('aria-label', 'Full gallery');
+
+      const bar = document.createElement('div');
+      bar.className = 'gallery-modal-bar';
+      bar.innerHTML = '<span class="gallery-modal-title">Full Gallery</span>';
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'gallery-modal-close';
+      closeBtn.setAttribute('aria-label', 'Close gallery');
+      closeBtn.innerHTML = '&times;';
+      closeBtn.addEventListener('click', closeGalleryModal);
+      bar.appendChild(closeBtn);
+
+      const scroller = document.createElement('div');
+      scroller.className = 'gallery-modal-scroll';
+      const cols = document.createElement('div');
+      cols.className = 'gallery-modal-cols';
+      scroller.appendChild(cols);
+      originals.forEach((item, i) => {
+        const src = item.querySelector('img');
+        const thumb = document.createElement('button');
+        thumb.type = 'button';
+        thumb.className = 'gallery-modal-thumb';
+        thumb.setAttribute('aria-label', `View photo ${i + 1}`);
+        const img = document.createElement('img');
+        img.src = src.src;
+        img.alt = src.alt;
+        img.loading = 'lazy';
+        thumb.appendChild(img);
+        thumb.addEventListener('click', () => openLightbox(i));
+        cols.appendChild(thumb);
+      });
+
+      galleryModal.appendChild(bar);
+      galleryModal.appendChild(scroller);
+      document.body.appendChild(galleryModal);
+    }
+
+    function openGalleryModal() {
+      if (!galleryModal) buildGalleryModal();
+      galleryModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      galleryModal.querySelector('.gallery-modal-close').focus();
+    }
+
+    function closeGalleryModal() {
+      if (!galleryModal) return;
+      galleryModal.classList.remove('active');
+      document.body.style.overflow = '';
+      moreLink?.focus();
+    }
+
+    moreLink?.addEventListener('click', openGalleryModal);
+
     document.addEventListener('keydown', e => {
-      if (!lightbox?.classList.contains('active')) return;
-      if (e.key === 'Escape')     closeLightbox();
-      if (e.key === 'ArrowRight') openLightbox((currentIdx + 1) % originals.length);
-      if (e.key === 'ArrowLeft')  openLightbox((currentIdx - 1 + originals.length) % originals.length);
+      if (lightbox?.classList.contains('active')) {
+        if (e.key === 'Escape')     closeLightbox();
+        if (e.key === 'ArrowRight') openLightbox((currentIdx + 1) % originals.length);
+        if (e.key === 'ArrowLeft')  openLightbox((currentIdx - 1 + originals.length) % originals.length);
+      } else if (e.key === 'Escape' && galleryModal?.classList.contains('active')) {
+        closeGalleryModal();
+      }
     });
 
     // Event delegation handles both originals and clones (clones share data-index)
